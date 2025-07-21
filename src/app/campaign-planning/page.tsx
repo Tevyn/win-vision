@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Download } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Slider } from "@/components/ui/slider"
 import { SimpleLayout } from "@/components/ui/simple-layout"
@@ -103,27 +103,45 @@ export default function CampaignPlanning() {
 
   const calculateCampaignPlan = () => {
     const weeklyTimeMinutes = timeAvailable * 60
-    const budgetForActivities = budget - 700 // Subtract website and social costs
+    const budgetForActivities = budget - 15 - 10 // Subtract website cost ($15) and voter data cost ($10/mo)
 
-    // Always include website and social posts
+    // Calculate social media posts based on time available (2-4 posts per week over 11 weeks)
+    const socialPostsCount = Math.round((timeAvailable / 40) * 44 + 22) // Scale from 22-44 posts
+
+    // Always include website, social posts, and voter data
     const basePlan = [
       {
         name: "Website",
         contacts: 0,
-        cost: 500,
-        time: 2, // hours per week
+        cost: 15,
+        time: 0.5, // one-time setup, minimal ongoing time
         description: "Professional campaign website",
         color: "bg-gray-500",
-        type: "minimal"
+        type: "minimal",
+        campaignCount: 1,
+        displayUnit: "website"
       },
       {
         name: "Social Posts",
         contacts: 0,
-        cost: 200,
+        cost: 0,
         time: 2, // hours per week
         description: "Regular social media content",
         color: "bg-pink-500",
-        type: "minimal"
+        type: "minimal",
+        campaignCount: socialPostsCount,
+        displayUnit: "posts"
+      },
+      {
+        name: "Voter Data",
+        contacts: 0,
+        cost: 10, // per month
+        time: 0, // no time required
+        description: "Voter insights, segments & contact information",
+        color: "bg-blue-500",
+        type: "minimal",
+        campaignCount: 1,
+        displayUnit: "database"
       }
     ]
 
@@ -134,33 +152,94 @@ export default function CampaignPlanning() {
         const maxContactsByTime = Math.floor(weeklyTimeMinutes / activity.timePerContact)
         const contacts = Math.min(maxContactsByTime, voterContactsNeeded)
         
+        // Calculate time based on activity type and intensity
+        let timeHours = contacts * activity.timePerContact / 60
+        if (activity.name === "Canvassing") {
+          timeHours = Math.min(timeHours, 8) // Cap at 8h/week
+        } else if (activity.name === "Events") {
+          timeHours = Math.min(timeHours, 4) // Cap at 4h/week
+        }
+        
+        // Calculate campaign counts
+        let campaignCount = 0
+        let displayUnit = ""
+        
+        if (activity.name === "Canvassing") {
+          campaignCount = Math.max(1, Math.round(contacts / 250)) // 1 campaign = ~250 contacts
+          displayUnit = campaignCount === 1 ? "campaign" : "campaigns"
+        } else if (activity.name === "Events") {
+          campaignCount = Math.max(1, Math.round(contacts / 30)) // 1 event = ~30 people
+          displayUnit = campaignCount === 1 ? "event" : "events"
+        }
+        
         return {
           name: activity.name,
           contacts: contacts,
           cost: 0, // No money cost
-          time: contacts * activity.timePerContact / 60, // convert to hours
+          time: timeHours,
           description: activity.description,
           color: activity.color,
           type: activity.type,
-          displayText: `${(contacts * activity.timePerContact / 60).toFixed(1)} hours/week`
+          campaignCount: campaignCount,
+          displayUnit: displayUnit,
+          displayText: `${timeHours.toFixed(1)} hours/week`
         }
       })
 
-    // Calculate money-intensive activities (texting, robocalls, digital ads) - these take money but no time
-    const moneyIntensiveActivities = activities
-      .filter(activity => activity.type === 'money-intensive')
+    // Calculate money-intensive activities (texting, robocalls, digital ads) - these take money but minimal time
+    // Remove high-cost channels when budget is too low
+    const digitalAdsCost = voterContactsNeeded * 0.30 // $1,875 for 6,250 contacts
+    const robocallsCost = voterContactsNeeded * 0.10 // $625 for 6,250 contacts
+    const textingCost = voterContactsNeeded * 0.05 // $312.50 for 6,250 contacts
+    
+    let availableActivities = activities.filter(activity => activity.type === 'money-intensive')
+    
+    // Remove activities if budget is too low (remove highest cost first)
+    if (budgetForActivities < digitalAdsCost + robocallsCost + textingCost) {
+      // Remove Digital Ads first (most expensive)
+      availableActivities = availableActivities.filter(activity => activity.name !== "Digital Ads")
+      
+      if (budgetForActivities < robocallsCost + textingCost) {
+        // Remove Robocalls second
+        availableActivities = availableActivities.filter(activity => activity.name !== "Robocalls")
+        
+        if (budgetForActivities < textingCost) {
+          // Remove Texting last
+          availableActivities = availableActivities.filter(activity => activity.name !== "Texting")
+        }
+      }
+    }
+    
+    const moneyIntensiveActivities = availableActivities
       .map(activity => {
         const maxContactsByBudget = Math.floor(budgetForActivities / activity.costPerContact)
         const contacts = Math.min(maxContactsByBudget, voterContactsNeeded)
+        
+        // Calculate campaign counts
+        let campaignCount = 0
+        let displayUnit = ""
+        
+        if (activity.name === "Texting") {
+          campaignCount = Math.max(1, Math.round(contacts / 750)) // 1 campaign = ~750 contacts
+          displayUnit = campaignCount === 1 ? "campaign" : "campaigns"
+        } else if (activity.name === "Robocalls") {
+          campaignCount = Math.max(1, Math.round(contacts / 750)) // 1 campaign = ~750 contacts  
+          displayUnit = campaignCount === 1 ? "campaign" : "campaigns"
+        } else if (activity.name === "Digital Ads") {
+          campaignCount = Math.max(1, Math.round(contacts / 300)) // 1 campaign = ~300 contacts
+          displayUnit = campaignCount === 1 ? "campaign" : "campaigns"
+        }
         
         return {
           name: activity.name,
           contacts: contacts,
           cost: contacts * activity.costPerContact,
-          time: 0, // No time cost
+          time: 0.5, // <1h/week for money-intensive activities
           description: activity.description,
           color: activity.color,
           type: activity.type,
+          campaignCount: campaignCount,
+          displayUnit: displayUnit,
           displayText: `${contacts.toLocaleString()} contacts`
         }
       })
@@ -171,6 +250,99 @@ export default function CampaignPlanning() {
   const totalCost = campaignPlan.reduce((sum, activity) => sum + activity.cost, 0)
   const totalContacts = campaignPlan.reduce((sum, activity) => sum + activity.contacts, 0)
   const totalTime = campaignPlan.reduce((sum, activity) => sum + activity.time, 0)
+
+  const handleDownloadPlan = () => {
+    // Generate campaign plan outline text
+    let planText = `CAMPAIGN PLAN OUTLINE\n`
+    planText += `Generated: ${new Date().toLocaleDateString()}\n\n`
+    planText += `RESOURCES:\n`
+    planText += `Budget: $${budget.toLocaleString()}\n`
+    planText += `Time Available: ${timeAvailable} hours/week\n\n`
+    planText += `CAMPAIGN ACTIVITIES:\n\n`
+    
+    // Always include Voter Data, Website, and Social Posts
+    planText += `Voter Data - $10/mo, 0h\n`
+    planText += `• Voter contact database\n`
+    planText += `• Ready-made voter segments\n`
+    planText += `• Voting history and likelihood\n\n`
+    
+    planText += `Website - $15, <1hr\n`
+    planText += `• Homepage with bio & platform\n`
+    planText += `• Issues & policy positions\n`
+    planText += `• Contact & volunteer forms\n\n`
+    
+    const socialPostsItem = campaignPlan.find(item => item.name === "Social Posts")
+    planText += `Social Media Posts - $0, 2h/week\n`
+    planText += `• ${socialPostsItem?.campaignCount || 33} posts total\n`
+    planText += `• Campaign announcements\n`
+    planText += `• Policy highlights\n`
+    planText += `• Behind-the-scenes content\n`
+    planText += `• Community engagement posts\n\n`
+    
+    // Add other activities
+    campaignPlan
+      .filter(activity => activity.contacts > 0 && activity.name !== "Website" && activity.name !== "Social Posts")
+      .forEach(activity => {
+        if (activity.name === "Texting") {
+          const textingIntensity = activity.contacts
+          let textTypes: string[] = []
+          
+          if (textingIntensity >= 400) {
+            textTypes = ["Introduction Text", "Persuasion Text", "Early Voting Text", "GOTV Text"]
+          } else if (textingIntensity >= 300) {
+            textTypes = ["Introduction Text", "Persuasion Text", "GOTV Text"]
+          } else if (textingIntensity >= 200) {
+            textTypes = ["Introduction Text", "GOTV Text"]
+          } else if (textingIntensity > 0) {
+            textTypes = ["Introduction Text"]
+          }
+          
+          planText += `Text Campaigns - $${Math.round(activity.cost)}, <1h/week\n`
+          planText += `• ${activity.campaignCount} ${activity.displayUnit}\n`
+          textTypes.forEach(textType => {
+            planText += `• ${textType}\n`
+          })
+          planText += `\n`
+        } else {
+          planText += `${activity.name} - $${Math.round(activity.cost)}, ${
+            activity.name === "Canvassing" ? "0-8h/week" :
+            activity.name === "Events" ? "0-4h/week" :
+            "<1h/week"
+          }\n`
+          planText += `• ${activity.campaignCount} ${activity.displayUnit}\n`
+          
+          if (activity.name === "Canvassing") {
+            planText += `• Door-to-door conversations\n• Voter ID & persuasion\n• Vote commitment tracking\n`
+          } else if (activity.name === "Events") {
+            planText += `• Community meet & greets\n• Town halls & forums\n• House parties\n`
+          } else if (activity.name === "Robocalls") {
+            planText += `• Introduction messages\n• Policy announcements\n• Election reminders\n`
+          } else if (activity.name === "Digital Ads") {
+            planText += `• Facebook & Instagram ads\n• Google search ads\n• YouTube video ads\n`
+          }
+          planText += `\n`
+        }
+      })
+    
+    planText += `\nCONTENT GENERATION:\n`
+    planText += `We'll automatically generate personalized content for every activity in your campaign plan based on your campaign identity and target audience. You can then review, edit, and approve the content we generate. Then pay for texts, robocalls, and digital ads on a campaign-by-campaign basis when you're ready to launch them.\n`
+
+    planText += `\nTOTALS:\n`
+    planText += `Total Voter Contacts: ${totalContacts.toLocaleString()}\n`
+    planText += `Total Cost: $${totalCost.toLocaleString()}\n`
+    planText += `Total Time: ${totalTime}h/week\n`
+    
+    // Create and download the file
+    const blob = new Blob([planText], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'campaign-plan-outline.txt'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <SimpleLayout>
@@ -248,34 +420,203 @@ export default function CampaignPlanning() {
             </CardContent>
           </Card>
 
-          {/* Voter Contacts Breakdown */}
+          {/* Campaign Plan Outline */}
           <Card className="mt-8">
             <CardHeader>
-              <CardTitle>Voter Contacts Breakdown</CardTitle>
-              <CardDescription>
-                Based on your time and budget, here's how you'll reach voters. You can adjust this mix during your campaign as needed.
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Campaign Plan Outline</CardTitle>
+                  <CardDescription>
+                    Based on your time and budget, here's your comprehensive campaign plan. You can adjust this mix during your campaign as needed.
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleDownloadPlan}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Plan
+                </Button>
+              </div>
+            </CardHeader>
+            
+            {/* Content Generation Notice */}
+            <CardContent className="pt-0">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-2">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-blue-600 font-semibold text-sm">✓</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-blue-900 mb-2">We've got the first drafts covered for all your content</h3>
+                    <p className="text-sm text-blue-800">
+                      For every activity in your campaign plan, we'll automatically generate personalized content 
+                      based on your campaign identity and target audience. You can then review, edit, and approve 
+                      the content we generate. Then pay for texts, robocalls, and digital ads on a campaign-by-campaign 
+                      basis when you're ready to launch them.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            
+            <CardHeader className="pt-0">
+              <CardTitle className="sr-only">Campaign Activities</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {campaignPlan
-                  .filter(activity => activity.contacts > 0)
-                  .map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${activity.color}`}></div>
-                        <span className="font-medium">{activity.name}</span>
-                      </div>
-                      <span className="text-sm text-gray-600">{activity.contacts.toLocaleString()} contacts</span>
+                {/* Always show Voter Data first */}
+                <div className="p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span className="font-medium">Voter Data</span>
                     </div>
-                  ))}
-              </div>
-              
-              <div className="mt-6 pt-4 border-t">
-                <p className="text-sm text-gray-600">
-                  <strong>Note:</strong> This is your starting plan. As your campaign progresses, you can adjust your strategy 
-                  based on what's working best and what resources become available.
-                </p>
+                    <div className="text-xs text-gray-500">
+                      $10/mo • 0h
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">Voter insights, segments & contact information</p>
+                  <div className="text-xs text-gray-500">
+                    <div>• Voter contact database</div>
+                    <div>• Ready-made voter segments</div>
+                    <div>• Voting history and likelihood</div>
+                  </div>
+                </div>
+
+                {/* Always show Website */}
+                <div className="p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                      <span className="font-medium">Website</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      $15 • {'<1hr'}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">Professional campaign website</p>
+                  <div className="text-xs text-gray-500">
+                    <div>• Homepage with bio & platform</div>
+                    <div>• Issues & policy positions</div>
+                    <div>• Contact & volunteer forms</div>
+                  </div>
+                </div>
+
+                {/* Always show Social Posts */}
+                <div className="p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-pink-500"></div>
+                      <span className="font-medium">Social Media Posts</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      $0 • 2h/week
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{campaignPlan.find(item => item.name === "Social Posts")?.campaignCount || 33} posts</p>
+                  <div className="text-xs text-gray-500">
+                    <div>• Campaign announcements</div>
+                    <div>• Policy highlights</div>
+                    <div>• Behind-the-scenes content</div>
+                    <div>• Community engagement posts</div>
+                  </div>
+                </div>
+
+                {/* Show other activities based on campaign plan */}
+                {campaignPlan
+                  .filter(activity => activity.contacts > 0 && activity.name !== "Website" && activity.name !== "Social Posts")
+                  .map((activity, index) => {
+                                         // Special handling for texting to show different text types
+                     if (activity.name === "Texting") {
+                       const textingIntensity = activity.contacts
+                       let textTypes: string[] = []
+                      
+                      if (textingIntensity >= 400) {
+                        textTypes = ["Introduction Text", "Persuasion Text", "Early Voting Text", "GOTV Text"]
+                      } else if (textingIntensity >= 300) {
+                        textTypes = ["Introduction Text", "Persuasion Text", "GOTV Text"]
+                      } else if (textingIntensity >= 200) {
+                        textTypes = ["Introduction Text", "GOTV Text"]
+                      } else if (textingIntensity > 0) {
+                        textTypes = ["Introduction Text"]
+                      }
+                      
+                      if (textTypes.length === 0) return null
+                      
+                      return (
+                        <div key={index} className="p-4 bg-gray-50 rounded-lg border">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${activity.color}`}></div>
+                              <span className="font-medium">Text Campaigns</span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ${Math.round(activity.cost)} • {'<1h/week'}
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{activity.campaignCount} {activity.displayUnit}</p>
+                          <div className="text-xs text-gray-500">
+                            {textTypes.map((textType, idx) => (
+                              <div key={idx}>• {textType}</div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    }
+                    
+                    // Handle other activities
+                    return (
+                      <div key={index} className="p-4 bg-gray-50 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${activity.color}`}></div>
+                            <span className="font-medium">{activity.name}</span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            ${Math.round(activity.cost)} • {
+                              activity.name === "Canvassing" ? "0-8h/week" :
+                              activity.name === "Events" ? "0-4h/week" :
+                              activity.time < 1 ? '<1h/week' : `${activity.time}h/week`
+                            }
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {activity.campaignCount && activity.displayUnit
+                            ? `${activity.campaignCount} ${activity.displayUnit}`
+                            : activity.displayText || activity.description
+                          }
+                        </p>
+                        <div className="text-xs text-gray-500">
+                          {activity.name === "Canvassing" && (
+                            <>
+                              <div>• Door-to-door conversations</div>
+                              <div>• Voter ID & persuasion</div>
+                              <div>• Vote commitment tracking</div>
+                            </>
+                          )}
+                          {activity.name === "Events" && (
+                            <>
+                              <div>• Community meet & greets</div>
+                              <div>• Town halls & forums</div>
+                              <div>• House parties</div>
+                            </>
+                          )}
+                          {activity.name === "Robocalls" && (
+                            <>
+                              <div>• Introduction messages</div>
+                              <div>• Policy announcements</div>
+                              <div>• Election reminders</div>
+                            </>
+                          )}
+                          {activity.name === "Digital Ads" && (
+                            <>
+                              <div>• Facebook & Instagram ads</div>
+                              <div>• Google search ads</div>
+                              <div>• YouTube video ads</div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
               </div>
             </CardContent>
           </Card>

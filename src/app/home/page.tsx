@@ -1,194 +1,241 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Circle } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { MainLayout } from "@/components/ui/main-layout"
+import OnboardingIntro from "../onboarding/tasks/onboarding-intro"
+import VoterSegmentsTask from "../onboarding/tasks/voter-segments"
+import CampaignIdentityTask from "../onboarding/tasks/campaign-identity"
+import WebsiteReviewTask from "../onboarding/tasks/website-review"
+import CampaignPlanReview from "../onboarding/tasks/campaign-plan-review"
 
-interface Task {
+interface OnboardingTask {
   id: string
   title: string
   description: string
   estimatedTime: string
-  status: 'pending' | 'completed'
-  uses: string[]
+  component: React.ComponentType<any>
+  isCompleted: boolean
 }
 
-const initialTasks: Task[] = [
+const onboardingTasks: OnboardingTask[] = [
   {
-    id: "voter-demographics",
-    title: "Learn About Your Voters",
-    description: "Understand the key demographics and characteristics of voters in your district.",
-    estimatedTime: "20 minutes",
-    status: 'pending',
-    uses: ["Platform Definition", "Core Messaging", "Targeted Outreach"]
+    id: "onboarding-intro",
+    title: "Welcome to Your Campaign Builder",
+    description: "Learn what we'll build together in the next 50 minutes - your complete campaign foundation.",
+    estimatedTime: "2 minutes",
+    component: OnboardingIntro,
+    isCompleted: false
   },
   {
-    id: "campaign-identity",
-    title: "Complete Your Campaign Identity",
-    description: "By completing your campaign identity, we'll be able to generate all of your outreach ahead of time.",
+    id: "voter-segments",
+    title: "Select Your Voter Segments",
+    description: "Choose the specific groups of voters you'll focus your campaign on. We'll help you reach at least 150% of your win number.",
+    estimatedTime: "10 minutes",
+    component: VoterSegmentsTask,
+    isCompleted: false
+  },
+  {
+    id: "campaign-identity", 
+    title: "Build Your Campaign Identity",
+    description: "Define your why statement, platform, and core messaging that resonates with your chosen voter segments. You can edit this later as your campaign evolves based on feedback from voters.",
     estimatedTime: "25 minutes",
-    status: 'pending',
-    uses: ["Website", "Social Posts", "Text Messages", "Robocalls", "Canvassing Scripts", "Core Messaging"]
+    component: CampaignIdentityTask,
+    isCompleted: false
   },
   {
-    id: "publish-website",
-    title: "Publish Your Campaign Website",
-    description: "Because you'll have completed your campaign identity, this will take <5 minutes.",
+    id: "website-content",
+    title: "Review & Publish Your Website", 
+    description: "Review the website content we generate based on your identity and publish your campaign site with one click.",
     estimatedTime: "<5 minutes",
-    status: 'pending',
-    uses: ["Online Presence", "Voter Information", "Credibility", "Contact Information"]
+    component: WebsiteReviewTask,
+    isCompleted: false
   },
   {
-    id: "practice-outreach",
-    title: "Practice Reaching Out",
-    description: "Text your 10 closest people with a message we'll help you craft based on your campaign identity. Campaigns are built on outreach, and this is a great way to test your message and get feedback from a supportive group.",
+    id: "campaign-plan",
+    title: "Review Your Campaign Plan", 
+    description: "See your personalized campaign plan with content tailored to each voter segment based on your campaign plan configuration.",
     estimatedTime: "15 minutes",
-    status: 'pending',
-    uses: ["Outreach Skills", "Message Testing", "Personal Network", "Practice"]
+    component: CampaignPlanReview,
+    isCompleted: false
   }
 ]
 
-
-
 export default function HomePage() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0)
+  const [tasks, setTasks] = useState<OnboardingTask[]>(onboardingTasks)
 
-  const handleTaskClick = (taskId: string) => {
-    // For now, just toggle completion status
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { ...task, status: task.status === 'completed' ? 'pending' : 'completed' }
-        : task
-    ))
+  // Load progress from localStorage on component mount
+  useEffect(() => {
+    const savedProgress = localStorage.getItem('onboarding-progress')
+    if (savedProgress) {
+      try {
+        const progress = JSON.parse(savedProgress)
+        setCurrentTaskIndex(progress.currentTaskIndex || 0)
+        
+        // Update tasks with saved completion status
+        setTasks(prevTasks => 
+          prevTasks.map(task => ({
+            ...task,
+            isCompleted: progress.completedTasks?.includes(task.id) || false
+          }))
+        )
+      } catch (error) {
+        console.error('Error loading onboarding progress:', error)
+      }
+    }
+  }, [])
+
+  // Save progress to localStorage whenever state changes
+  useEffect(() => {
+    const completedTaskIds = tasks.filter(task => task.isCompleted).map(task => task.id)
+    const progress = {
+      currentTaskIndex,
+      completedTasks: completedTaskIds
+    }
+    localStorage.setItem('onboarding-progress', JSON.stringify(progress))
+  }, [currentTaskIndex, tasks])
+
+  const currentTask = tasks[currentTaskIndex]
+  const completedTasks = tasks.filter(task => task.isCompleted).length
+  const totalTasks = tasks.length
+
+  const handleTaskComplete = (taskId: string, data?: any) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId ? { ...task, isCompleted: true } : task
+      )
+    )
+    
+    // Also save task-specific data if needed
+    if (data) {
+      localStorage.setItem(`onboarding-task-${taskId}`, JSON.stringify(data))
+    }
+    
+    // Move to next task if available
+    if (currentTaskIndex < tasks.length - 1) {
+      setCurrentTaskIndex(currentTaskIndex + 1)
+    }
   }
 
-  const completedTasks = tasks.filter(task => task.status === 'completed').length
-  const totalTasks = tasks.length
+  const handlePreviousTask = () => {
+    if (currentTaskIndex > 0) {
+      setCurrentTaskIndex(currentTaskIndex - 1)
+    }
+  }
+
+  const handleNextTask = () => {
+    if (currentTaskIndex < tasks.length - 1) {
+      setCurrentTaskIndex(currentTaskIndex + 1)
+    }
+  }
+
+  const TaskComponent = currentTask.component
 
   return (
     <MainLayout currentPage="home">
       <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Campaign Foundation
-                </h1>
-                <p className="text-lg text-gray-600">
-                  Let's build the foundation of your campaign. Complete these tasks to get started.
-                </p>
-              </div>
-            </div>
-
-            {/* Progress */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Your Progress</CardTitle>
-                <CardDescription>
-                  {completedTasks} of {totalTasks} tasks completed
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-600">
-                  {completedTasks === 0 && "Let's get started! Click on any task to begin."}
-                  {completedTasks > 0 && completedTasks < totalTasks && "Great progress! Keep going."}
-                  {completedTasks === totalTasks && "Excellent! You've completed all foundation tasks."}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Task List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Foundation Tasks</CardTitle>
-                <CardDescription>
-                  Complete these essential tasks to build a strong campaign foundation. Each task creates content that gets used across multiple channels.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {tasks.map((task, index) => (
-                    <Card 
-                      key={task.id}
-                      className={`cursor-pointer transition-all hover:shadow-md ${
-                        task.status === 'completed' 
-                          ? 'border-green-200 bg-green-50' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => handleTaskClick(task.id)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3 flex-1">
-                            <div className="mt-1">
-                              {task.status === 'completed' ? (
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                              ) : (
-                                <Circle className="w-5 h-5 text-gray-400" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className={`font-semibold ${
-                                  task.status === 'completed' ? 'text-green-800' : 'text-gray-900'
-                                }`}>
-                                  {index + 1}. {task.title}
-                                </h3>
-                                <Badge variant="outline" className="text-xs">
-                                  {task.estimatedTime}
-                                </Badge>
-                              </div>
-                              <p className={`text-sm ${
-                                task.status === 'completed' ? 'text-green-700' : 'text-gray-600'
-                              }`}>
-                                {task.description}
-                              </p>
-                              <div className="mt-3">
-                                <div className="text-xs text-gray-500 mb-2">Used in:</div>
-                                <div className="flex flex-wrap gap-1">
-                                  {task.uses.map((use, useIndex) => (
-                                    <Badge 
-                                      key={useIndex} 
-                                      variant="outline" 
-                                      className="text-xs"
-                                    >
-                                      {use}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            {task.status === 'completed' ? (
-                              <Badge variant="default" className="bg-green-600">
-                                Completed
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline">
-                                Pending
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-
-              </CardContent>
-            </Card>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Campaign Onboarding
+            </h1>
+            <p className="text-lg text-gray-600">
+              Let's build your campaign step by step
+            </p>
           </div>
-      </MainLayout>
-    )
-  } 
+        </div>
+
+        {/* Progress */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Your Progress</CardTitle>
+            <CardDescription>
+              Step {currentTaskIndex + 1} of {totalTasks} • {completedTasks} completed
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+              <div 
+                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${((currentTaskIndex + (currentTask.isCompleted ? 1 : 0)) / totalTasks) * 100}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              {tasks.map((task, index) => (
+                <div key={task.id} className={`text-center ${index === currentTaskIndex ? 'text-blue-600 font-medium' : ''}`}>
+                  {task.title}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Current Task */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  {currentTask.title}
+                  <Badge variant="outline">{currentTask.estimatedTime}</Badge>
+                </CardTitle>
+                <CardDescription className="mt-2">
+                  {currentTask.description}
+                </CardDescription>
+              </div>
+              {currentTask.isCompleted && (
+                <Badge variant="default" className="bg-green-600">
+                  Completed
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TaskComponent 
+              onComplete={(data?: any) => handleTaskComplete(currentTask.id, data)}
+              isCompleted={currentTask.isCompleted}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={handlePreviousTask}
+            disabled={currentTaskIndex === 0}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Previous Task
+          </Button>
+          
+          <Button
+            onClick={handleNextTask}
+            disabled={currentTaskIndex === tasks.length - 1 || !currentTask.isCompleted}
+            className="flex items-center gap-2"
+          >
+            Next Task
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {completedTasks === totalTasks && (
+          <Card className="mt-8 border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-green-800">🎉 Onboarding Complete!</CardTitle>
+              <CardDescription className="text-green-700">
+                You've completed all onboarding tasks. Your campaign is ready to launch!
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+      </div>
+    </MainLayout>
+  )
+}

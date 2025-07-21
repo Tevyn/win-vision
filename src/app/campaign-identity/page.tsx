@@ -1,181 +1,121 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { Target, MessageSquare, Lightbulb, MessageCircle, CheckCircle2, CheckCircle, Circle } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Lightbulb, MessageSquare, Plus, X, MessageCircle } from "lucide-react"
 import { MainLayout } from "@/components/ui/main-layout"
 
-interface IdentitySection {
+interface Issue {
   id: string
-  title: string
-  description: string
-  content: string
-  guidelines: string[]
-  uses: string[]
-  isCompleted: boolean
-  isApproved: boolean
+  problemToSolve: string
+  howItHurtsPeople: string
+  whatYoullDo: string
 }
 
-interface OutreachItem {
-  name: string
-  description: string
-  requiredSections: string[]
+interface FormData {
+  background: string
+  personalExperience: string
+  issues: Issue[]
+  whyStatement: string
 }
 
 export default function CampaignIdentity() {
-  const [sections, setSections] = useState<IdentitySection[]>([
-    {
-      id: "why-statement",
-      title: "Why Statement",
-      description: "Your personal motivation for running and what drives you to serve your community. This is the emotional core of your campaign.",
-      content: "",
-      guidelines: [
-        "Be personal and authentic - share your story",
-        "Connect to your community and its needs",
-        "Explain what motivates you to make change",
-        "Keep it concise but meaningful (2-3 sentences)",
-        "Make it memorable and repeatable"
-      ],
-      uses: ["Website", "Social Posts", "Text Messages", "Robocalls", "Canvassing Scripts", "Event Introductions"],
-      isCompleted: false,
-      isApproved: false
-    },
-    {
-      id: "platform",
-      title: "Platform",
-      description: "Your key policy positions and what you'll focus on if elected. This defines your priorities and goals for office.",
-      content: "",
-      guidelines: [
-        "Focus on 3-5 key issues that matter most",
-        "Be specific about your positions and solutions",
-        "Connect to local community needs",
-        "Show how you'll make a difference",
-        "Keep language accessible to all voters"
-      ],
-      uses: ["Core Messaging", "Website", "Social Posts", "Canvassing Scripts", "Event Talking Points", "Media Interviews"],
-      isCompleted: false,
-      isApproved: false
-    },
-    {
-      id: "core-messaging",
-      title: "Core Messaging",
-      description: "Your main talking points and how you'll communicate your platform to voters. This is your campaign's voice and key messages.",
-      content: "",
-      guidelines: [
-        "Create 3-5 key messages that support your platform",
-        "Use simple, clear language that resonates",
-        "Include both problems and solutions",
-        "Make messages memorable and repeatable",
-        "Ensure consistency across all communications"
-      ],
-      uses: ["Text Messages", "Robocalls", "Canvassing Scripts", "Social Posts", "Website", "Press Releases"],
-      isCompleted: false,
-      isApproved: false
+  const [formData, setFormData] = useState<FormData>({
+    background: "",
+    personalExperience: "",
+    issues: [{ id: "1", problemToSolve: "", howItHurtsPeople: "", whatYoullDo: "" }],
+    whyStatement: ""
+  })
+
+  // Load data from onboarding on component mount
+  useEffect(() => {
+    const savedIdentityData = localStorage.getItem('onboarding-task-campaign-identity')
+    if (savedIdentityData) {
+      try {
+        const data = JSON.parse(savedIdentityData)
+        setFormData(data)
+      } catch (error) {
+        console.error('Error loading campaign identity data:', error)
+      }
     }
-  ])
+  }, [])
 
-  const outreachItems: OutreachItem[] = [
-    {
-      name: "Website",
-      description: "Your campaign website with key messaging",
-      requiredSections: ["why-statement", "platform", "core-messaging"]
-    },
-    {
-      name: "Social Posts",
-      description: "Facebook, Instagram, and other social media content",
-      requiredSections: ["why-statement", "platform", "core-messaging"]
-    },
-    {
-      name: "Text Messages",
-      description: "Voter outreach via SMS",
-      requiredSections: ["why-statement", "core-messaging"]
-    },
-    {
-      name: "Robocalls",
-      description: "Automated phone calls to voters",
-      requiredSections: ["why-statement", "core-messaging"]
-    },
-    {
-      name: "Canvassing Scripts",
-      description: "Door-to-door conversation guides",
-      requiredSections: ["why-statement", "platform", "core-messaging"]
-    },
-    {
-      name: "Event Introductions",
-      description: "Speaking points for events and forums",
-      requiredSections: ["why-statement"]
-    },
-    {
-      name: "Event Talking Points",
-      description: "Key messages for public speaking",
-      requiredSections: ["platform"]
-    },
-    {
-      name: "Media Interviews",
-      description: "Press and media conversation prep",
-      requiredSections: ["platform"]
-    },
-    {
-      name: "Press Releases",
-      description: "Official campaign announcements",
-      requiredSections: ["core-messaging"]
+  // Save data to localStorage whenever formData changes
+  useEffect(() => {
+    localStorage.setItem('onboarding-task-campaign-identity', JSON.stringify(formData))
+  }, [formData])
+
+  const handleInputChange = (field: keyof Omit<FormData, 'issues'>, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleIssueChange = (issueId: string, field: keyof Issue, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      issues: prev.issues.map(issue =>
+        issue.id === issueId ? { ...issue, [field]: value } : issue
+      )
+    }))
+  }
+
+  const addIssue = () => {
+    if (formData.issues.length >= 4) return
+    
+    const newId = (Math.max(...formData.issues.map(i => parseInt(i.id))) + 1).toString()
+    setFormData(prev => ({
+      ...prev,
+      issues: [...prev.issues, { id: newId, problemToSolve: "", howItHurtsPeople: "", whatYoullDo: "" }]
+    }))
+  }
+
+  const removeIssue = (issueId: string) => {
+    if (formData.issues.length <= 1) return
+    
+    setFormData(prev => ({
+      ...prev,
+      issues: prev.issues.filter(issue => issue.id !== issueId)
+    }))
+  }
+
+  const generateDraft = () => {
+    const validIssues = formData.issues.filter(issue => 
+      issue.problemToSolve && issue.howItHurtsPeople && issue.whatYoullDo
+    )
+    
+    if (!formData.personalExperience || validIssues.length === 0) {
+      return
     }
-  ]
 
-  const handleContentChange = (sectionId: string, newContent: string) => {
-    setSections(sections.map(section => 
-      section.id === sectionId 
-        ? { 
-            ...section, 
-            content: newContent,
-            isCompleted: newContent.trim().length > 0
-          }
-        : section
-    ))
-  }
-
-  const handleApprove = (sectionId: string) => {
-    setSections(sections.map(section => 
-      section.id === sectionId 
-        ? { 
-            ...section, 
-            isApproved: true
-          }
-        : section
-    ))
-  }
-
-  const handleFeedback = (sectionId: string) => {
-    // For now, just show an alert - this could be expanded to show a modal or redirect
-    alert("Feedback feature coming soon! This will help you improve your content.")
-  }
-
-  const getStatusBadge = (section: IdentitySection) => {
-    if (section.isApproved) {
-      return <Badge className="bg-green-600">Approved</Badge>
-    } else if (section.isCompleted) {
-      return <Badge variant="outline" className="border-blue-500 text-blue-700">Ready for Review</Badge>
+    let draft = `I'm running for office because ${formData.personalExperience}, and I want to `
+    
+    if (validIssues.length === 1) {
+      draft += `${validIssues[0].whatYoullDo}, so that ${validIssues[0].howItHurtsPeople} can have a better future.`
     } else {
-      return <Badge variant="outline">Pending</Badge>
+      const solutions = validIssues.map(issue => issue.whatYoullDo)
+      const lastSolution = solutions.pop()
+      draft += `${solutions.join(', ')} and ${lastSolution}, so that our community can have a better future.`
     }
+    
+    setFormData(prev => ({
+      ...prev,
+      whyStatement: draft
+    }))
   }
 
-  const getOutreachCompletion = (outreach: OutreachItem) => {
-    const approvedSections = sections.filter(s => s.isApproved).map(s => s.id)
-    const completedRequirements = outreach.requiredSections.filter(req => approvedSections.includes(req))
-    return {
-      completed: completedRequirements.length,
-      total: outreach.requiredSections.length,
-      isComplete: completedRequirements.length === outreach.requiredSections.length
-    }
-  }
+  const canGenerateDraft = formData.personalExperience && 
+    formData.issues.some(issue => issue.problemToSolve && issue.howItHurtsPeople && issue.whatYoullDo)
 
   return (
     <MainLayout currentPage="campaign-identity">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="text-center">
@@ -183,163 +123,197 @@ export default function CampaignIdentity() {
               Campaign Identity
             </h1>
             <p className="text-lg text-gray-600">
-              Define your campaign's core identity and messaging foundation.
+              Your campaign's core identity and messaging foundation. You can edit this anytime as your campaign evolves.
             </p>
           </div>
         </div>
 
-        {/* Campaign Materials Generation */}
-        <Card className="mb-8">
+        {/* Campaign Materials Preview */}
+        <Card className="border-green-200 bg-green-50 mb-8">
           <CardHeader>
-            <CardTitle>Your Campaign Materials</CardTitle>
-            <CardDescription>
-              Once you complete your campaign identity, we'll use these pieces to generate all of your outreach materials
+            <CardTitle className="text-lg text-green-800">Your Campaign Materials</CardTitle>
+            <CardDescription className="text-green-700">
+              This identity powers all your campaign outreach. Changes here automatically update everything.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <div className="max-w-3xl mx-auto">
-                <p className="text-lg text-gray-700 mb-6">
-                  Your identity foundation will power everything from your website and social media posts to your canvassing scripts and press releases. We'll automatically generate personalized, consistent messaging across all your campaign touchpoints.
-                </p>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <Badge variant="outline" className="text-sm py-2 px-4">Website Content</Badge>
-                  <Badge variant="outline" className="text-sm py-2 px-4">Social Media Posts</Badge>
-                  <Badge variant="outline" className="text-sm py-2 px-4">Text Messages</Badge>
-                  <Badge variant="outline" className="text-sm py-2 px-4">Canvassing Scripts</Badge>
-                  <Badge variant="outline" className="text-sm py-2 px-4">Press Releases</Badge>
-                  <Badge variant="outline" className="text-sm py-2 px-4">Event Talking Points</Badge>
-                  <Badge variant="outline" className="text-sm py-2 px-4">Robocalls</Badge>
-                  <Badge variant="outline" className="text-sm py-2 px-4">Email Campaigns</Badge>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                "Website Content", "8 Social Media Posts", "5 Text Messages", "3 Canvassing Scripts", 
+                "2 Press Releases", "4 Event Talking Points", "2 Robocalls", "6 Email Campaigns"
+              ].map((material, index) => (
+                <Badge key={index} variant="outline" className="justify-center py-2 border-green-300 text-green-800">
+                  {material}
+                </Badge>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Commented out outreach tracking section */}
-        {/*
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Your Campaign Outreach</CardTitle>
-            <CardDescription>
-              Once you have your campaign identity completed, we'll work it into all of your outreach
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {outreachItems.map((item, index) => {
-                const completion = getOutreachCompletion(item)
-                return (
-                  <div key={index} className={`p-4 border rounded-lg ${completion.isComplete ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                      {completion.isComplete ? (
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-400" />
+        <div className="space-y-6">
+          {/* Section 1: Background Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">1. Tell Us About You</CardTitle>
+              <CardDescription>
+                Your background and the personal experience that shaped you as a person.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="background" className="text-sm font-medium">
+                  Your background (job, family, community role)
+                </Label>
+                <Input
+                  id="background"
+                  placeholder="e.g., Local teacher, parent of two, volunteer at the food bank..."
+                  value={formData.background}
+                  onChange={(e) => handleInputChange("background", e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="experience" className="text-sm font-medium">
+                  Personal experience that shaped you (one key story/moment)
+                </Label>
+                <Textarea
+                  id="experience"
+                  placeholder="e.g., When my daughter's school almost closed due to budget cuts, I realized..."
+                  value={formData.personalExperience}
+                  onChange={(e) => handleInputChange("personalExperience", e.target.value)}
+                  className="mt-1 min-h-[80px]"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 2: Issues and Solutions */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">2. The Issues You Care About</CardTitle>
+                  <CardDescription>
+                    The problems you want to solve and your solutions. You can add up to 4 issues.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addIssue}
+                  disabled={formData.issues.length >= 4}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Issue
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {formData.issues.map((issue, index) => (
+                <Card key={issue.id} className="border-gray-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">Issue {index + 1}</CardTitle>
+                      {formData.issues.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeIssue(issue.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">{item.description}</p>
-                    <div className="space-y-1">
-                      {item.requiredSections.map((reqSection) => {
-                        const section = sections.find(s => s.id === reqSection)
-                        const isApproved = section?.isApproved || false
-                        return (
-                          <div key={reqSection} className="flex items-center gap-2 text-xs">
-                            {isApproved ? (
-                              <CheckCircle className="w-3 h-3 text-green-600" />
-                            ) : (
-                              <Circle className="w-3 h-3 text-gray-400" />
-                            )}
-                            <span className={isApproved ? 'text-green-700' : 'text-gray-500'}>
-                              {section?.title}
-                            </span>
-                          </div>
-                        )
-                      })}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <Label htmlFor={`problem-${issue.id}`} className="text-sm font-medium">
+                        The problem you want to solve
+                      </Label>
+                      <Input
+                        id={`problem-${issue.id}`}
+                        placeholder="e.g., Lack of affordable housing, inadequate school funding..."
+                        value={issue.problemToSolve}
+                        onChange={(e) => handleIssueChange(issue.id, "problemToSolve", e.target.value)}
+                        className="mt-1"
+                      />
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-        */}
+                    <div>
+                      <Label htmlFor={`impact-${issue.id}`} className="text-sm font-medium">
+                        How it hurts people personally
+                      </Label>
+                      <Input
+                        id={`impact-${issue.id}`}
+                        placeholder="e.g., Families are being forced to move away, children aren't getting quality education..."
+                        value={issue.howItHurtsPeople}
+                        onChange={(e) => handleIssueChange(issue.id, "howItHurtsPeople", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`solution-${issue.id}`} className="text-sm font-medium">
+                        What you'll do to fix it
+                      </Label>
+                      <Input
+                        id={`solution-${issue.id}`}
+                        placeholder="e.g., Create more affordable housing programs, increase education funding..."
+                        value={issue.whatYoullDo}
+                        onChange={(e) => handleIssueChange(issue.id, "whatYoullDo", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
 
-        {/* Sections */}
-        <div className="space-y-8">
-          {sections.map((section, index) => (
-            <Card key={section.id} className={`${section.isApproved ? 'border-green-200 bg-green-50' : section.isCompleted ? 'border-blue-200 bg-blue-50' : ''}`}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className={`${section.isApproved ? 'text-green-800' : section.isCompleted ? 'text-blue-800' : 'text-gray-900'}`}>
-                      {index + 1}. {section.title}
-                    </CardTitle>
-                    <CardDescription className={section.isApproved ? 'text-green-700' : section.isCompleted ? 'text-blue-700' : ''}>
-                      {section.description}
-                    </CardDescription>
-                  </div>
-                  {getStatusBadge(section)}
-                </div>
-              </CardHeader>
-              <CardContent>
+          {/* Section 3: Why Statement */}
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-lg text-blue-800">3. Your Why Statement</CardTitle>
+              <CardDescription className="text-blue-700">
+                Your core campaign message that connects with voters.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Content Input - Left side (2 columns) */}
                   <div className="lg:col-span-2 space-y-4">
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-blue-600" />
-                        Your {section.title}
+                        Your Why Statement
                       </h4>
                       <Textarea
-                        placeholder={`Write your ${section.title.toLowerCase()} here...`}
-                        value={section.content}
-                        onChange={(e) => handleContentChange(section.id, e.target.value)}
+                        placeholder="Write or edit your why statement here..."
+                        value={formData.whyStatement}
+                        onChange={(e) => handleInputChange("whyStatement", e.target.value)}
                         className="min-h-[120px] resize-none"
                       />
                     </div>
                     
-                    {/* Action Buttons */}
+                    {/* Action Buttons under text box */}
                     <div className="flex gap-3">
                       <Button
                         variant="outline"
-                        size="sm"
-                        onClick={() => handleFeedback(section.id)}
+                        onClick={generateDraft}
+                        disabled={!canGenerateDraft}
+                        className="flex items-center gap-2"
+                      >
+                        Generate New Draft
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => alert("Get feedback feature coming soon!")}
                         className="flex items-center gap-2"
                       >
                         <MessageCircle className="w-4 h-4" />
                         Get Feedback
                       </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleApprove(section.id)}
-                        disabled={!section.isCompleted || section.isApproved}
-                        className="flex items-center gap-2"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        {section.isApproved ? "Approved" : "Approve"}
-                      </Button>
-                    </div>
-
-                    {/* Uses */}
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <Target className="w-4 h-4 text-red-600" />
-                        Used In
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {section.uses.map((use, useIndex) => (
-                          <Badge 
-                            key={useIndex} 
-                            variant="outline" 
-                            className="text-xs"
-                          >
-                            {use}
-                          </Badge>
-                        ))}
-                      </div>
                     </div>
                   </div>
 
@@ -351,22 +325,38 @@ export default function CampaignIdentity() {
                         Guidelines
                       </h4>
                       <ul className="space-y-2">
-                        {section.guidelines.map((guideline, guidelineIndex) => (
-                          <li key={guidelineIndex} className="flex items-start gap-2 text-sm text-gray-700">
-                            <span className="text-blue-600 font-semibold mt-0.5">•</span>
-                            {guideline}
-                          </li>
-                        ))}
+                        <li className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-blue-600 font-semibold mt-0.5">•</span>
+                          Be personal - share your real story
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-blue-600 font-semibold mt-0.5">•</span>
+                          Connect to community needs - show who benefits
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-blue-600 font-semibold mt-0.5">•</span>
+                          Take 20 seconds or less to say out loud
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-blue-600 font-semibold mt-0.5">•</span>
+                          Use simple language a 10-year-old would understand
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-blue-600 font-semibold mt-0.5">•</span>
+                          Feel authentic to you when you say it
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="text-blue-600 font-semibold mt-0.5">•</span>
+                          Be repeatable - others can easily remember it
+                        </li>
                       </ul>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-
       </div>
     </MainLayout>
   )
