@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -231,7 +231,7 @@ Paid for by [Your Name] for [Office]`,
   }
 }
 
-export default function ScriptApproval() {
+function ScriptApprovalContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isApproved, setIsApproved] = useState(false)
@@ -350,5 +350,13 @@ export default function ScriptApproval() {
         </div>
       </div>
     </MainLayout>
+  )
+}
+
+export default function ScriptApproval() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ScriptApprovalContent />
+    </Suspense>
   )
 } 

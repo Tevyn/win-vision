@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Lightbulb, MessageSquare, CheckCircle2, Plus, X, MessageCircle } from "lucide-react"
 
 interface CampaignIdentityProps {
-  onComplete: (data?: any) => void
+  onComplete: (data?: unknown) => void
   isCompleted: boolean
 }
 
@@ -118,11 +118,6 @@ export default function CampaignIdentityTask({ onComplete, isCompleted }: Campai
     }))
   }
 
-  const completeWhyStatementSection = () => {
-    if (formData.whyStatement.trim()) {
-      setSectionState(prev => ({ ...prev, whyStatementCompleted: true }))
-    }
-  }
 
   const editWhyStatementSection = () => {
     setSectionState(prev => ({ ...prev, whyStatementCompleted: false }))
@@ -188,7 +183,7 @@ export default function CampaignIdentityTask({ onComplete, isCompleted }: Campai
           <span className="text-xl font-semibold">Campaign Identity Complete!</span>
         </div>
         <p className="text-gray-600">
-          You've defined your campaign's core identity and why statement.
+          You&apos;ve defined your campaign&apos;s core identity and why statement.
         </p>
       </div>
     )
@@ -407,7 +402,7 @@ export default function CampaignIdentityTask({ onComplete, isCompleted }: Campai
                       </div>
                       <div>
                         <Label htmlFor={`solution-${issue.id}`} className="text-sm font-medium">
-                          What you'll do to fix it
+                          What you&apos;ll do to fix it
                         </Label>
                         <Input
                           id={`solution-${issue.id}`}
@@ -490,7 +485,7 @@ export default function CampaignIdentityTask({ onComplete, isCompleted }: Campai
               <div className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Your Why Statement:</p>
-                  <p className="text-sm text-gray-900 italic">"{formData.whyStatement}"</p>
+                  <p className="text-sm text-gray-900 italic">&quot;{formData.whyStatement}&quot;</p>
                 </div>
                 <Button
                   variant="outline"
@@ -510,7 +505,7 @@ export default function CampaignIdentityTask({ onComplete, isCompleted }: Campai
                     {!showDraft && (
                       <div className="text-center py-6">
                         <p className="text-gray-600 mb-4">
-                          Ready to create your why statement? We'll generate a draft based on your background and issues.
+                          Ready to create your why statement? We&apos;ll generate a draft based on your background and issues.
                         </p>
                         <Button
                           onClick={generateDraft}

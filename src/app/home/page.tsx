@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { MainLayout } from "@/components/ui/main-layout"
 import OnboardingIntro from "../onboarding/tasks/onboarding-intro"
 import VoterSegmentsTask from "../onboarding/tasks/voter-segments"
@@ -12,12 +12,17 @@ import CampaignIdentityTask from "../onboarding/tasks/campaign-identity"
 import WebsiteReviewTask from "../onboarding/tasks/website-review"
 import CampaignPlanReview from "../onboarding/tasks/campaign-plan-review"
 
+interface OnboardingTaskProps {
+  onComplete: (data?: unknown) => void
+  isCompleted: boolean
+}
+
 interface OnboardingTask {
   id: string
   title: string
   description: string
   estimatedTime: string
-  component: React.ComponentType<any>
+  component: React.ComponentType<OnboardingTaskProps>
   isCompleted: boolean
 }
 
@@ -103,7 +108,7 @@ export default function HomePage() {
   const completedTasks = tasks.filter(task => task.isCompleted).length
   const totalTasks = tasks.length
 
-  const handleTaskComplete = (taskId: string, data?: any) => {
+  const handleTaskComplete = (taskId: string, data?: unknown) => {
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId ? { ...task, isCompleted: true } : task
@@ -145,7 +150,7 @@ export default function HomePage() {
               Campaign Onboarding
             </h1>
             <p className="text-lg text-gray-600">
-              Let's build your campaign step by step
+              Let&apos;s build your campaign step by step
             </p>
           </div>
         </div>
@@ -197,7 +202,7 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <TaskComponent 
-              onComplete={(data?: any) => handleTaskComplete(currentTask.id, data)}
+              onComplete={(data?: unknown) => handleTaskComplete(currentTask.id, data)}
               isCompleted={currentTask.isCompleted}
             />
           </CardContent>
@@ -230,7 +235,7 @@ export default function HomePage() {
             <CardHeader>
               <CardTitle className="text-green-800">🎉 Onboarding Complete!</CardTitle>
               <CardDescription className="text-green-700">
-                You've completed all onboarding tasks. Your campaign is ready to launch!
+                You&apos;ve completed all onboarding tasks. Your campaign is ready to launch!
               </CardDescription>
             </CardHeader>
           </Card>

@@ -123,7 +123,7 @@ export default function CampaignIdentity() {
               Campaign Identity
             </h1>
             <p className="text-lg text-gray-600">
-              Your campaign's core identity and messaging foundation. You can edit this anytime as your campaign evolves.
+              Your campaign&apos;s core identity and messaging foundation. You can edit this anytime as your campaign evolves.
             </p>
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function CampaignIdentity() {
                     </div>
                     <div>
                       <Label htmlFor={`solution-${issue.id}`} className="text-sm font-medium">
-                        What you'll do to fix it
+                        What you&apos;ll do to fix it
                       </Label>
                       <Input
                         id={`solution-${issue.id}`}

@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { SimpleLayout } from "@/components/ui/simple-layout"
@@ -30,7 +29,7 @@ export default function PathToVictory() {
                 Your Path to Victory
               </h1>
               <p className="text-lg text-gray-600">
-                Here's what you need to focus on to win your local election.
+                Here&apos;s what you need to focus on to win your local election.
               </p>
             </div>
           </div>
@@ -40,7 +39,7 @@ export default function PathToVictory() {
             <CardHeader>
               <CardTitle>Votes Needed to Win</CardTitle>
               <CardDescription>
-                Here's your target number of votes based on recent election data.
+                Here&apos;s your target number of votes based on recent election data.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -72,7 +71,7 @@ export default function PathToVictory() {
                     <h4 className="font-semibold mb-3">Our Recommendation</h4>
                     <p className="text-gray-600">
                       We recommend making 5x the number of voter contacts as the votes you need. 
-                      This accounts for people who won't answer, aren't home, or won't vote for you. 
+                      This accounts for people who won&apos;t answer, aren&apos;t home, or won&apos;t vote for you. 
                       For your 1,250 vote target, plan to contact 6,250 voters.
                     </p>
                   </div>

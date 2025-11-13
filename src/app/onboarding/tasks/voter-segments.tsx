@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Check } from "lucide-react"
 import { Users, Target, CheckCircle } from "lucide-react"
 
@@ -93,7 +92,7 @@ const categoryInfo = {
 }
 
 interface VoterSegmentsTaskProps {
-  onComplete: (data?: any) => void
+  onComplete: (data?: unknown) => void
   isCompleted: boolean
 }
 
@@ -148,12 +147,12 @@ export default function VoterSegmentsTask({ onComplete, isCompleted }: VoterSegm
             Personalized Content for Your Voter Segments
           </CardTitle>
           <CardDescription className="text-blue-700">
-            We'll use these segments to personalize all of your campaign content in conjunction with your campaign identity. 
+            We&apos;ll use these segments to personalize all of your campaign content in conjunction with your campaign identity. 
             This includes your <strong>website content, social media posts, email campaigns, text messages, direct mail pieces, 
             door-to-door scripts, talking points, event invitations, and policy messaging</strong>.
             <br /><br />
             You need to reach <strong>{TARGET_VOTERS.toLocaleString()} voters</strong> (150% of your win number of {WIN_NUMBER.toLocaleString()}) 
-            because you won't get everyone in your target segments to vote for you. We're building in leeway to account for 
+            because you won&apos;t get everyone in your target segments to vote for you. We&apos;re building in leeway to account for 
             voter turnout, persuasion rates, and campaign effectiveness to ensure you have a strong path to victory.
           </CardDescription>
         </CardHeader>

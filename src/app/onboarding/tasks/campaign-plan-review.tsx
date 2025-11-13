@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Eye, CheckCircle, AlertCircle, ExternalLink, Users, DollarSign, Clock } from "lucide-react"
+import { Calendar, CheckCircle, AlertCircle, ExternalLink, Users, DollarSign, Clock } from "lucide-react"
 
 interface CampaignActivity {
   name: string
@@ -33,7 +33,7 @@ interface WeeklyPlan {
 }
 
 interface CampaignPlanReviewProps {
-  onComplete: (data?: any) => void
+  onComplete: (data?: unknown) => void
   isCompleted: boolean
 }
 
@@ -328,7 +328,7 @@ export default function CampaignPlanReview({ onComplete, isCompleted }: Campaign
         <CardContent>
           <div className="text-sm text-gray-600 mb-4">
             All campaign content (scripts, ads, social posts, etc.) is generated based on your campaign identity. 
-            Your website content is already approved and ready to go! You'll need to review and approve each remaining piece of content before it goes live.
+            Your website content is already approved and ready to go! You&apos;ll need to review and approve each remaining piece of content before it goes live.
           </div>
           <Button 
             onClick={handleViewFullPlan}
@@ -409,7 +409,7 @@ export default function CampaignPlanReview({ onComplete, isCompleted }: Campaign
                           </div>
                           {activity.script && (
                             <div className="text-xs text-gray-400 truncate mt-1">
-                              "{activity.script.substring(0, 50)}..."
+                              &quot;{activity.script.substring(0, 50)}...&quot;
                             </div>
                           )}
                         </div>

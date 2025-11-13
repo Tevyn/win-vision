@@ -152,17 +152,22 @@ const mockVoterData = [
   }
 ]
 
+interface ChartDataItem {
+  [key: string]: string | number | undefined
+  color?: string
+}
+
 interface ChartCardProps {
   title: string
   description: string
-  data: any[]
+  data: ChartDataItem[]
   type: 'bar' | 'pie'
   dataKey?: string
   nameKey?: string
   colorKey?: string
 }
 
-function ChartCard({ title, description, data, type, dataKey = 'count', nameKey = 'name', colorKey }: ChartCardProps) {
+function ChartCard({ title, description, data, type, dataKey = 'count' }: ChartCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -187,7 +192,7 @@ function ChartCard({ title, description, data, type, dataKey = 'count', nameKey 
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={({ name, percent }: { name: string; percent?: number }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey={dataKey}
@@ -456,9 +461,9 @@ export default function VoterDataPage() {
                   </div>
                   <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div className="text-sm text-gray-600">
-                      {voters.filter(v => v.support === 'yes').length} supporters, {' '}
-                      {voters.filter(v => v.support === 'no').length} opposed, {' '}
-                      {voters.filter(v => v.support === 'undecided').length} undecided, {' '}
+                      {voters.filter(v => v.support === 'yes').length} supporters,{' '}
+                      {voters.filter(v => v.support === 'no').length} opposed,{' '}
+                      {voters.filter(v => v.support === 'undecided').length} undecided,{' '}
                       {voters.filter(v => v.support === null).length} not contacted
                     </div>
                     <Button>Add New Voter</Button>

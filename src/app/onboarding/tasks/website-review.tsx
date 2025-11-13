@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Upload, Check, Edit2, Plus } from "lucide-react"
 
 interface WebsiteReviewProps {
-  onComplete: (data?: any) => void
+  onComplete: (data?: unknown) => void
   isCompleted: boolean
 }
 
@@ -263,7 +263,7 @@ export default function WebsiteReviewTask({ onComplete, isCompleted }: WebsiteRe
               {colorThemes.map((theme) => (
                 <button
                   key={theme.id}
-                  onClick={() => handleColorThemeChange(theme.id as any)}
+                  onClick={() => handleColorThemeChange(theme.id as 'light' | 'dark' | 'meridian' | 'earthy')}
                   className={`relative border-2 rounded-lg p-4 transition-all ${
                     websiteData.colorTheme === theme.id 
                       ? 'border-blue-500 bg-blue-50' 

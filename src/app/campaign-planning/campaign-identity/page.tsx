@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Heart, Settings, User, Home, BarChart3, ClipboardList, Phone, Globe, Palette, Target, MessageSquare, Lightbulb, MessageCircle, CheckCircle2, CheckCircle, Circle } from "lucide-react"
+import { ArrowLeft, Heart, Settings, User, Home, BarChart3, ClipboardList, Phone, Globe, Palette, Target, MessageSquare, Lightbulb, MessageCircle, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface IdentitySection {
@@ -17,12 +17,6 @@ interface IdentitySection {
   uses: string[]
   isCompleted: boolean
   isApproved: boolean
-}
-
-interface OutreachItem {
-  name: string
-  description: string
-  requiredSections: string[]
 }
 
 const navItems = [
@@ -87,54 +81,6 @@ export default function CampaignIdentity() {
     }
   ])
 
-  const outreachItems: OutreachItem[] = [
-    {
-      name: "Website",
-      description: "Your campaign website with key messaging",
-      requiredSections: ["why-statement", "platform", "core-messaging"]
-    },
-    {
-      name: "Social Posts",
-      description: "Facebook, Instagram, and other social media content",
-      requiredSections: ["why-statement", "platform", "core-messaging"]
-    },
-    {
-      name: "Text Messages",
-      description: "Voter outreach via SMS",
-      requiredSections: ["why-statement", "core-messaging"]
-    },
-    {
-      name: "Robocalls",
-      description: "Automated phone calls to voters",
-      requiredSections: ["why-statement", "core-messaging"]
-    },
-    {
-      name: "Canvassing Scripts",
-      description: "Door-to-door conversation guides",
-      requiredSections: ["why-statement", "platform", "core-messaging"]
-    },
-    {
-      name: "Event Introductions",
-      description: "Speaking points for events and forums",
-      requiredSections: ["why-statement"]
-    },
-    {
-      name: "Event Talking Points",
-      description: "Key messages for public speaking",
-      requiredSections: ["platform"]
-    },
-    {
-      name: "Media Interviews",
-      description: "Press and media conversation prep",
-      requiredSections: ["platform"]
-    },
-    {
-      name: "Press Releases",
-      description: "Official campaign announcements",
-      requiredSections: ["core-messaging"]
-    }
-  ]
-
   const handleContentChange = (sectionId: string, newContent: string) => {
     setSections(sections.map(section => 
       section.id === sectionId 
@@ -158,7 +104,7 @@ export default function CampaignIdentity() {
     ))
   }
 
-  const handleFeedback = (sectionId: string) => {
+  const handleFeedback = () => {
     // For now, just show an alert - this could be expanded to show a modal or redirect
     alert("Feedback feature coming soon! This will help you improve your content.")
   }
@@ -175,16 +121,6 @@ export default function CampaignIdentity() {
 
   const completedSections = sections.filter(section => section.isCompleted).length
   const totalSections = sections.length
-
-  const getOutreachCompletion = (outreach: OutreachItem) => {
-    const approvedSections = sections.filter(s => s.isApproved).map(s => s.id)
-    const completedRequirements = outreach.requiredSections.filter(req => approvedSections.includes(req))
-    return {
-      completed: completedRequirements.length,
-      total: outreach.requiredSections.length,
-      isComplete: completedRequirements.length === outreach.requiredSections.length
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -280,7 +216,7 @@ export default function CampaignIdentity() {
                   Campaign Identity
                 </h1>
                 <p className="text-lg text-gray-600">
-                  Define your campaign's core identity and messaging foundation.
+                  Define your campaign&apos;s core identity and messaging foundation.
                 </p>
               </div>
             </div>
@@ -290,14 +226,14 @@ export default function CampaignIdentity() {
               <CardHeader>
                 <CardTitle>Your Campaign Materials</CardTitle>
                 <CardDescription>
-                  Once you complete your campaign identity, we'll use these pieces to generate all of your outreach materials
+                  Once you complete your campaign identity, we&apos;ll use these pieces to generate all of your outreach materials
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
                   <div className="max-w-3xl mx-auto">
                     <p className="text-lg text-gray-700 mb-6">
-                      Your identity foundation will power everything from your website and social media posts to your canvassing scripts and press releases. We'll automatically generate personalized, consistent messaging across all your campaign touchpoints.
+                      Your identity foundation will power everything from your website and social media posts to your canvassing scripts and press releases. We&apos;ll automatically generate personalized, consistent messaging across all your campaign touchpoints.
                     </p>
                     <div className="flex flex-wrap justify-center gap-3">
                       <Badge variant="outline" className="text-sm py-2 px-4">Website Content</Badge>
@@ -403,7 +339,7 @@ export default function CampaignIdentity() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleFeedback(section.id)}
+                            onClick={handleFeedback}
                             className="flex items-center gap-2"
                           >
                             <MessageCircle className="w-4 h-4" />

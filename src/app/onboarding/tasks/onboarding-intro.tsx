@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Users, Lightbulb, Globe, Calendar, ChevronRight, CheckCircle } from "lucide-react"
 
 interface OnboardingIntroProps {
-  onComplete: (data?: any) => void
+  onComplete: (data?: unknown) => void
   isCompleted: boolean
 }
 
@@ -65,8 +65,8 @@ export default function OnboardingIntro({ onComplete, isCompleted }: OnboardingI
             Welcome to Your Campaign Builder
           </CardTitle>
           <CardDescription className="text-blue-700 text-lg">
-            Let's get your campaign set up in 4 simple steps. This entire process will take about <strong>50 minutes</strong>, 
-            and you'll walk away with everything you need to launch your campaign.
+            Let&apos;s get your campaign set up in 4 simple steps. This entire process will take about <strong>50 minutes</strong>, 
+            and you&apos;ll walk away with everything you need to launch your campaign.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -74,9 +74,9 @@ export default function OnboardingIntro({ onComplete, isCompleted }: OnboardingI
       {/* What You'll Get */}
       <Card>
         <CardHeader>
-          <CardTitle>What You'll Have When We're Done</CardTitle>
+          <CardTitle>What You&apos;ll Have When We&apos;re Done</CardTitle>
           <CardDescription>
-            By the end of this onboarding, you'll have a complete campaign foundation:
+            By the end of this onboarding, you&apos;ll have a complete campaign foundation:
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,7 +115,7 @@ export default function OnboardingIntro({ onComplete, isCompleted }: OnboardingI
 
       {/* Steps Overview */}
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-gray-800">Here's What We'll Do Together</h3>
+        <h3 className="text-xl font-semibold text-gray-800">Here&apos;s What We&apos;ll Do Together</h3>
         
         <div className="space-y-3">
           {onboardingSteps.map((step, index) => {
@@ -159,7 +159,7 @@ export default function OnboardingIntro({ onComplete, isCompleted }: OnboardingI
         <CardHeader>
           <CardTitle className="text-green-800">Ready to Build Your Campaign?</CardTitle>
           <CardDescription className="text-green-700">
-            The process is designed to be collaborative - we'll guide you through each step with clear instructions and smart defaults.
+            The process is designed to be collaborative - we&apos;ll guide you through each step with clear instructions and smart defaults.
             You can always go back and make changes later.
           </CardDescription>
         </CardHeader>
@@ -174,7 +174,7 @@ export default function OnboardingIntro({ onComplete, isCompleted }: OnboardingI
                 className="w-4 h-4"
               />
               <span className="text-sm text-green-700">
-                I understand what we'll be doing and I'm ready to start building my campaign
+                I understand what we&apos;ll be doing and I&apos;m ready to start building my campaign
               </span>
             </label>
           </div>

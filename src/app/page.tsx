@@ -1,7 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
@@ -56,7 +54,7 @@ const offices: Office[] = [
 export default function Home() {
   const router = useRouter()
 
-  const handleOfficeSelect = (officeId: string) => {
+  const handleOfficeSelect = () => {
     router.push(`/path-to-victory`)
   }
 
@@ -79,7 +77,7 @@ export default function Home() {
             <CardHeader>
               <CardTitle>Choose Your Office</CardTitle>
               <CardDescription>
-                Select the position you want to run for. We'll show you exactly what it takes to win.
+                Select the position you want to run for. We&apos;ll show you exactly what it takes to win.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -88,7 +86,7 @@ export default function Home() {
                   <Card 
                     key={office.id}
                     className="cursor-pointer transition-all hover:shadow-md hover:bg-gray-50"
-                    onClick={() => handleOfficeSelect(office.id)}
+                    onClick={handleOfficeSelect}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">

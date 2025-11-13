@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Download } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Slider } from "@/components/ui/slider"
@@ -16,6 +15,20 @@ interface CampaignActivity {
   description: string
   color: string
   type: 'time-intensive' | 'money-intensive' | 'minimal'
+}
+
+interface CampaignPlanItem {
+  name: string
+  contacts: number
+  cost: number
+  time: number
+  description: string
+  color: string
+  type: string
+  campaignCount: number
+  displayUnit: string
+  displayText?: string
+  isGreyedOut?: boolean
 }
 
 const activities: CampaignActivity[] = [
@@ -71,7 +84,7 @@ export default function CampaignPlanning() {
 
   const [budget, setBudget] = useState(maxBudget * 0.5)
   const [timeAvailable, setTimeAvailable] = useState(20) // hours per week
-  const [campaignPlan, setCampaignPlan] = useState<any[]>([])
+  const [campaignPlan, setCampaignPlan] = useState<CampaignPlanItem[]>([])
 
   // Calculate dependent values
   const maxTime = 40
@@ -99,6 +112,7 @@ export default function CampaignPlanning() {
 
   useEffect(() => {
     calculateCampaignPlan()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budget, timeAvailable])
 
   const calculateCampaignPlan = () => {
@@ -187,31 +201,48 @@ export default function CampaignPlanning() {
       })
 
     // Calculate money-intensive activities (texting, robocalls, digital ads) - these take money but minimal time
-    // Remove high-cost channels when budget is too low
+    // Grey out high-cost channels when budget is too low instead of hiding them
     const digitalAdsCost = voterContactsNeeded * 0.30 // $1,875 for 6,250 contacts
     const robocallsCost = voterContactsNeeded * 0.10 // $625 for 6,250 contacts
     const textingCost = voterContactsNeeded * 0.05 // $312.50 for 6,250 contacts
     
-    let availableActivities = activities.filter(activity => activity.type === 'money-intensive')
+    const allMoneyIntensiveActivities = activities.filter(activity => activity.type === 'money-intensive')
     
-    // Remove activities if budget is too low (remove highest cost first)
-    if (budgetForActivities < digitalAdsCost + robocallsCost + textingCost) {
-      // Remove Digital Ads first (most expensive)
-      availableActivities = availableActivities.filter(activity => activity.name !== "Digital Ads")
-      
-      if (budgetForActivities < robocallsCost + textingCost) {
-        // Remove Robocalls second
-        availableActivities = availableActivities.filter(activity => activity.name !== "Robocalls")
-        
-        if (budgetForActivities < textingCost) {
-          // Remove Texting last
-          availableActivities = availableActivities.filter(activity => activity.name !== "Texting")
-        }
-      }
-    }
+    // Determine which activities should be greyed out based on budget
+    const shouldGreyOutDigitalAds = budgetForActivities < digitalAdsCost + robocallsCost + textingCost
+    const shouldGreyOutRobocalls = budgetForActivities < robocallsCost + textingCost
+    const shouldGreyOutTexting = budgetForActivities < textingCost
     
-    const moneyIntensiveActivities = availableActivities
+    const moneyIntensiveActivities = allMoneyIntensiveActivities
       .map(activity => {
+        // Check if this activity should be greyed out
+        let isGreyedOut = false
+        if (activity.name === "Digital Ads" && shouldGreyOutDigitalAds) {
+          isGreyedOut = true
+        } else if (activity.name === "Robocalls" && shouldGreyOutRobocalls) {
+          isGreyedOut = true
+        } else if (activity.name === "Texting" && shouldGreyOutTexting) {
+          isGreyedOut = true
+        }
+        
+        // If greyed out, set everything to 0
+        if (isGreyedOut) {
+          return {
+            name: activity.name,
+            contacts: 0,
+            cost: 0,
+            time: 0,
+            description: activity.description,
+            color: activity.color,
+            type: activity.type,
+            campaignCount: 0,
+            displayUnit: "campaigns",
+            displayText: "0 contacts",
+            isGreyedOut: true
+          }
+        }
+        
+        // Otherwise, calculate normally
         const maxContactsByBudget = Math.floor(budgetForActivities / activity.costPerContact)
         const contacts = Math.min(maxContactsByBudget, voterContactsNeeded)
         
@@ -240,7 +271,8 @@ export default function CampaignPlanning() {
           type: activity.type,
           campaignCount: campaignCount,
           displayUnit: displayUnit,
-          displayText: `${contacts.toLocaleString()} contacts`
+          displayText: `${contacts.toLocaleString()} contacts`,
+          isGreyedOut: false
         }
       })
 
@@ -364,7 +396,7 @@ export default function CampaignPlanning() {
                   Campaign Foundation
                 </h1>
                 <p className="text-lg text-gray-600">
-                  Let's build the foundation of your campaign. Complete these tasks to get started.
+                  Let&apos;s build the foundation of your campaign. Complete these tasks to get started.
                 </p>
               </div>
             </div>
@@ -427,7 +459,7 @@ export default function CampaignPlanning() {
                 <div>
                   <CardTitle>Campaign Plan Outline</CardTitle>
                   <CardDescription>
-                    Based on your time and budget, here's your comprehensive campaign plan. You can adjust this mix during your campaign as needed.
+                    Based on your time and budget, here&apos;s your comprehensive campaign plan. You can adjust this mix during your campaign as needed.
                   </CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleDownloadPlan}>
@@ -445,12 +477,12 @@ export default function CampaignPlanning() {
                     <span className="text-blue-600 font-semibold text-sm">✓</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-blue-900 mb-2">We've got the first drafts covered for all your content</h3>
+                    <h3 className="font-semibold text-blue-900 mb-2">We&apos;ve got the first drafts covered for all your content</h3>
                     <p className="text-sm text-blue-800">
-                      For every activity in your campaign plan, we'll automatically generate personalized content 
+                      For every activity in your campaign plan, we&apos;ll automatically generate personalized content 
                       based on your campaign identity and target audience. You can then review, edit, and approve 
                       the content we generate. Then pay for texts, robocalls, and digital ads on a campaign-by-campaign 
-                      basis when you're ready to launch them.
+                      basis when you&apos;re ready to launch them.
                     </p>
                   </div>
                 </div>
@@ -522,7 +554,7 @@ export default function CampaignPlanning() {
 
                 {/* Show other activities based on campaign plan */}
                 {campaignPlan
-                  .filter(activity => activity.contacts > 0 && activity.name !== "Website" && activity.name !== "Social Posts")
+                  .filter(activity => activity.name !== "Website" && activity.name !== "Social Posts" && activity.name !== "Voter Data")
                   .map((activity, index) => {
                                          // Special handling for texting to show different text types
                      if (activity.name === "Texting") {
@@ -537,6 +569,27 @@ export default function CampaignPlanning() {
                         textTypes = ["Introduction Text", "GOTV Text"]
                       } else if (textingIntensity > 0) {
                         textTypes = ["Introduction Text"]
+                      }
+                      
+                      // For greyed out texting, show empty state
+                      if (activity.isGreyedOut) {
+                        return (
+                          <div key={index} className="p-4 bg-gray-100 rounded-lg border border-gray-300 opacity-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                                <span className="font-medium text-gray-500">Text Campaigns</span>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                $0 • 0h/week
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-500 mb-2">0 campaigns</p>
+                            <div className="text-xs text-gray-400">
+                              <div>• Insufficient budget</div>
+                            </div>
+                          </div>
+                        )
                       }
                       
                       if (textTypes.length === 0) return null
@@ -563,54 +616,78 @@ export default function CampaignPlanning() {
                     }
                     
                     // Handle other activities
+                    const isGreyedOut = activity.isGreyedOut
                     return (
-                      <div key={index} className="p-4 bg-gray-50 rounded-lg border">
+                      <div key={index} className={`p-4 rounded-lg border ${
+                        isGreyedOut 
+                          ? 'bg-gray-100 border-gray-300 opacity-50' 
+                          : 'bg-gray-50 border-gray-200'
+                      }`}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${activity.color}`}></div>
-                            <span className="font-medium">{activity.name}</span>
+                            <div className={`w-3 h-3 rounded-full ${
+                              isGreyedOut ? 'bg-gray-400' : activity.color
+                            }`}></div>
+                            <span className={`font-medium ${
+                              isGreyedOut ? 'text-gray-500' : 'text-gray-900'
+                            }`}>{activity.name}</span>
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className={`text-xs ${
+                            isGreyedOut ? 'text-gray-400' : 'text-gray-500'
+                          }`}>
                             ${Math.round(activity.cost)} • {
+                              isGreyedOut ? '0h/week' :
                               activity.name === "Canvassing" ? "0-8h/week" :
                               activity.name === "Events" ? "0-4h/week" :
                               activity.time < 1 ? '<1h/week' : `${activity.time}h/week`
                             }
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {activity.campaignCount && activity.displayUnit
+                        <p className={`text-sm mb-2 ${
+                          isGreyedOut ? 'text-gray-500' : 'text-gray-600'
+                        }`}>
+                          {isGreyedOut
+                            ? "0 campaigns"
+                            : activity.campaignCount && activity.displayUnit
                             ? `${activity.campaignCount} ${activity.displayUnit}`
                             : activity.displayText || activity.description
                           }
                         </p>
-                        <div className="text-xs text-gray-500">
-                          {activity.name === "Canvassing" && (
+                        <div className={`text-xs ${
+                          isGreyedOut ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {isGreyedOut ? (
+                            <div>• Insufficient budget</div>
+                          ) : (
                             <>
-                              <div>• Door-to-door conversations</div>
-                              <div>• Voter ID & persuasion</div>
-                              <div>• Vote commitment tracking</div>
-                            </>
-                          )}
-                          {activity.name === "Events" && (
-                            <>
-                              <div>• Community meet & greets</div>
-                              <div>• Town halls & forums</div>
-                              <div>• House parties</div>
-                            </>
-                          )}
-                          {activity.name === "Robocalls" && (
-                            <>
-                              <div>• Introduction messages</div>
-                              <div>• Policy announcements</div>
-                              <div>• Election reminders</div>
-                            </>
-                          )}
-                          {activity.name === "Digital Ads" && (
-                            <>
-                              <div>• Facebook & Instagram ads</div>
-                              <div>• Google search ads</div>
-                              <div>• YouTube video ads</div>
+                              {activity.name === "Canvassing" && (
+                                <>
+                                  <div>• Door-to-door conversations</div>
+                                  <div>• Voter ID & persuasion</div>
+                                  <div>• Vote commitment tracking</div>
+                                </>
+                              )}
+                              {activity.name === "Events" && (
+                                <>
+                                  <div>• Community meet & greets</div>
+                                  <div>• Town halls & forums</div>
+                                  <div>• House parties</div>
+                                </>
+                              )}
+                              {activity.name === "Robocalls" && (
+                                <>
+                                  <div>• Introduction messages</div>
+                                  <div>• Policy announcements</div>
+                                  <div>• Election reminders</div>
+                                </>
+                              )}
+                              {activity.name === "Digital Ads" && (
+                                <>
+                                  <div>• Facebook & Instagram ads</div>
+                                  <div>• Google search ads</div>
+                                  <div>• YouTube video ads</div>
+                                </>
+                              )}
                             </>
                           )}
                         </div>
